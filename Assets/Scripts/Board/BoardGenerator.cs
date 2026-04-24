@@ -20,7 +20,7 @@ public class BoardGenerator : MonoBehaviour
     [Tooltip("Tiles per side — total tiles = tilesPerSide x 4")]
     [SerializeField] private int tilesPerSide = 10;
     [Tooltip("Visual width of one tile in world units")]
-    [SerializeField] private float tileSize = 0.85f;
+    [SerializeField] private float tileSize = 1.3f;
     [Tooltip("Gap between adjacent tiles")]
     [SerializeField] private float tileGap = 0.05f;
     [Tooltip("How much larger the outline is (1.15 = 15% bigger than fill)")]
@@ -33,7 +33,7 @@ public class BoardGenerator : MonoBehaviour
     public IReadOnlyList<BoardTile> Tiles => tiles;
     public Color TileHighlightColor => tileHighlightColor;
 
-    private void Start() => GenerateBoard();
+    private void Awake() => GenerateBoard();
 
     [ContextMenu("Generate Board")]
     public void GenerateBoard()

@@ -7,7 +7,11 @@
       "mcp__UnityMCP__manage_build",
       "mcp__UnityMCP__execute_code",
       "mcp__UnityMCP__manage_scene",
-      "mcp__UnityMCP__refresh_unity"
+      "mcp__UnityMCP__refresh_unity",
+      "mcp__UnityMCP__find_gameobjects",
+      "mcp__UnityMCP__manage_components",
+      "mcp__UnityMCP__manage_packages",
+      "mcp__UnityMCP__manage_gameobject"
     ]
   }
 }
