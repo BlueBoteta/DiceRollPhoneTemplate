@@ -2252,6 +2252,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CameraController
   targetOrthoSize: 10
   zoomDuration: 2
+  followSpeed: 4
   targetPosition: {x: 0, y: 0, z: -10}
 --- !u!1 &520884722
 GameObject:
@@ -7609,6 +7610,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   playerColor: {r: 0.95, g: 0.35, b: 0.35, a: 1}
   playerScale: 0.38
+  jumpHeight: 0.7
+  jumpDuration: 0.27
 --- !u!1 &1689330892
 GameObject:
   m_ObjectHideFlags: 0

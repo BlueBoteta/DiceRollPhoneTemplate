@@ -1,46 +1,144 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
     [SerializeField] private Color playerColor = new Color(0.95f, 0.35f, 0.35f, 1f);
-    [SerializeField] private float playerScale = 0.38f;
+    [SerializeField] private float playerScale  = 0.38f;
+    [SerializeField] private float jumpHeight   = 0.7f;
+    [SerializeField] private float jumpDuration = 0.27f;
 
-    private InputAction rollAction;
+    private InputAction   rollAction;
+    private BoardGenerator board;
+    private int            currentTileIndex = 0;
+    private bool           isMoving         = false;
+    private Vector3        baseScale;
 
     private void Awake()
     {
         SpriteRenderer sr = gameObject.AddComponent<SpriteRenderer>();
-        sr.sprite = CreateCircleSprite();
-        sr.color = playerColor;
+        sr.sprite       = CreateCircleSprite();
+        sr.color        = playerColor;
         sr.sortingOrder = 5;
+
         transform.localScale = Vector3.one * playerScale;
+        baseScale = transform.localScale;
 
         rollAction = new InputAction("RollDice", InputActionType.Button);
         rollAction.AddBinding("<Keyboard>/space");
         rollAction.AddBinding("<Touchscreen>/touch*/tap");
-        rollAction.performed += OnRollDice;
+        rollAction.performed += ctx => Debug.Log("Roll Dice!");
     }
 
     private void Start()
     {
-        BoardGenerator board = FindFirstObjectByType<BoardGenerator>();
+        board = FindFirstObjectByType<BoardGenerator>();
         if (board != null && board.Tiles.Count > 0)
         {
             Vector3 pos = board.Tiles[0].transform.position;
             pos.z = -0.1f;
             transform.position = pos;
         }
+
+        var dice = FindFirstObjectByType<DiceSystem>();
+        if (dice != null)
+            dice.OnRollComplete += MoveSteps;
     }
 
     private void OnEnable()  => rollAction?.Enable();
     private void OnDisable() => rollAction?.Disable();
 
-    private void OnRollDice(InputAction.CallbackContext ctx)
+    // ── Public entry point called by DiceSystem ──────────────────────────────
+    public void MoveSteps(int steps)
     {
-        Debug.Log("Roll Dice!");
+        if (isMoving || board == null) return;
+        StartCoroutine(MoveCoroutine(steps));
     }
 
+    // ── Step through tiles one by one ─────────────────────────────────────────
+    private IEnumerator MoveCoroutine(int steps)
+    {
+        isMoving = true;
+        int total = board.Tiles.Count;
+
+        for (int i = 0; i < steps; i++)
+        {
+            currentTileIndex = (currentTileIndex - 1 + total) % total;
+            var tile = board.Tiles[currentTileIndex];
+
+            Vector3 target = tile.transform.position;
+            target.z = -0.1f;
+
+            yield return StartCoroutine(JumpTo(transform.position, target));
+
+            // Highlight tile on landing
+            tile.Highlight(board.TileHighlightColor);
+            yield return new WaitForSeconds(0.1f);
+            tile.ResetColor();
+
+            yield return new WaitForSeconds(0.03f);
+        }
+
+        isMoving = false;
+    }
+
+    // ── Arc jump between two world positions ──────────────────────────────────
+    private IEnumerator JumpTo(Vector3 from, Vector3 to)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < jumpDuration)
+        {
+            elapsed += Time.deltaTime;
+            float t      = Mathf.Clamp01(elapsed / jumpDuration);
+            float eased  = t < 0.5f ? 2f * t * t : 1f - Mathf.Pow(-2f * t + 2f, 2f) / 2f;
+
+            // Horizontal lerp + parabolic arc on Y
+            Vector3 pos = Vector3.Lerp(from, to, eased);
+            pos.y += Mathf.Sin(t * Mathf.PI) * jumpHeight;
+            transform.position = pos;
+
+            // Tilt toward direction of travel at peak, straighten at land
+            Vector3 dir   = to - from;
+            float   tilt  = Mathf.Sin(t * Mathf.PI) * 18f * Mathf.Sign(dir.x != 0 ? dir.x : dir.y);
+            transform.rotation = Quaternion.Euler(0f, 0f, tilt);
+
+            // Stretch up on the way up, squash at peak start
+            float stretchY = 1f + Mathf.Sin(t * Mathf.PI * 0.5f) * 0.25f;
+            float stretchX = 1f - Mathf.Sin(t * Mathf.PI * 0.5f) * 0.12f;
+            transform.localScale = new Vector3(baseScale.x * stretchX, baseScale.y * stretchY, baseScale.z);
+
+            yield return null;
+        }
+
+        transform.position     = to;
+        transform.rotation     = Quaternion.identity;
+
+        yield return StartCoroutine(LandSquash());
+    }
+
+    // ── Squash & stretch on landing ───────────────────────────────────────────
+    private IEnumerator LandSquash()
+    {
+        const float duration = 0.13f;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t       = elapsed / duration;
+            float squashY = 1f - Mathf.Sin(t * Mathf.PI) * 0.38f;
+            float squashX = 1f + Mathf.Sin(t * Mathf.PI) * 0.28f;
+            transform.localScale = new Vector3(
+                baseScale.x * squashX,
+                baseScale.y * squashY,
+                baseScale.z);
+            yield return null;
+        }
+        transform.localScale = baseScale;
+    }
+
+    // ── Procedural circle sprite ───────────────────────────────────────────────
     private static Sprite CreateCircleSprite()
     {
         const int size = 128;
@@ -51,7 +149,7 @@ public class PlayerController : MonoBehaviour
         for (int y = 0; y < size; y++)
         for (int x = 0; x < size; x++)
         {
-            float dist = Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
+            float dist  = Mathf.Sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
             float alpha = 1f - Mathf.Clamp01((dist - (r - 1.5f)) / 2.5f);
             pixels[y * size + x] = new Color(1f, 1f, 1f, alpha);
         }
