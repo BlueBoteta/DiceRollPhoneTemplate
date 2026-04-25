@@ -1721,21 +1721,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!115 &462832641
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 7
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_Type: 0
-  m_ExecutionOrder: 0
-  m_ClassName: VariableExamples/PlayerController
-  m_Namespace: 
-  m_AssemblyName: Unity.VisualScripting.DocCodeExamples
 --- !u!28 &471031270
 Texture2D:
   m_ObjectHideFlags: 0
@@ -6928,7 +6913,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1688653818}
-  - component: {fileID: 1688653817}
+  - component: {fileID: 1688653819}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -6936,18 +6921,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1688653817
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1688653816}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 462832641}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.VisualScripting.DocCodeExamples::VariableExamples/PlayerController
 --- !u!4 &1688653818
 Transform:
   m_ObjectHideFlags: 0
@@ -6963,6 +6936,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1688653819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1688653816}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 67fd354789e07024fae94972ce4b475c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerController
+  playerColor: {r: 0.95, g: 0.35, b: 0.35, a: 1}
+  playerScale: 0.38
 --- !u!1 &1689330892
 GameObject:
   m_ObjectHideFlags: 0
