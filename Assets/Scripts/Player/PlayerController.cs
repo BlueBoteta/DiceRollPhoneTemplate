@@ -4,16 +4,18 @@ using UnityEngine.InputSystem;
 
 public class PlayerController : MonoBehaviour
 {
-    [SerializeField] private Color playerColor = new Color(0.95f, 0.35f, 0.35f, 1f);
+    [SerializeField] private Color playerColor  = new Color(0.95f, 0.35f, 0.35f, 1f);
     [SerializeField] private float playerScale  = 0.38f;
     [SerializeField] private float jumpHeight   = 0.7f;
     [SerializeField] private float jumpDuration = 0.27f;
 
-    private InputAction   rollAction;
-    private BoardGenerator board;
-    private int            currentTileIndex = 0;
-    private bool           isMoving         = false;
-    private Vector3        baseScale;
+    private InputAction      rollAction;
+    private BoardGenerator   board;
+    private DiceSystem       diceSystem;
+    private CameraController cameraController;
+    private int              currentTileIndex = 0;
+    private bool             isMoving         = false;
+    private Vector3          baseScale;
 
     private void Awake()
     {
@@ -23,7 +25,7 @@ public class PlayerController : MonoBehaviour
         sr.sortingOrder = 5;
 
         transform.localScale = Vector3.one * playerScale;
-        baseScale = transform.localScale;
+        baseScale            = transform.localScale;
 
         rollAction = new InputAction("RollDice", InputActionType.Button);
         rollAction.AddBinding("<Keyboard>/space");
@@ -33,30 +35,34 @@ public class PlayerController : MonoBehaviour
 
     private void Start()
     {
-        board = FindFirstObjectByType<BoardGenerator>();
+        board            = FindFirstObjectByType<BoardGenerator>();
+        diceSystem       = FindFirstObjectByType<DiceSystem>();
+        cameraController = FindFirstObjectByType<CameraController>();
+
         if (board != null && board.Tiles.Count > 0)
         {
             Vector3 pos = board.Tiles[0].transform.position;
-            pos.z = -0.1f;
+            pos.z       = -0.1f;
             transform.position = pos;
         }
 
-        var dice = FindFirstObjectByType<DiceSystem>();
-        if (dice != null)
-            dice.OnRollComplete += MoveSteps;
+        if (diceSystem != null)
+            diceSystem.OnRollComplete += MoveSteps;
     }
 
     private void OnEnable()  => rollAction?.Enable();
     private void OnDisable() => rollAction?.Disable();
 
-    // ── Public entry point called by DiceSystem ──────────────────────────────
     public void MoveSteps(int steps)
     {
         if (isMoving || board == null) return;
+
+        // First move — zoom camera in to gameplay size
+        cameraController?.ZoomToGameplay();
+
         StartCoroutine(MoveCoroutine(steps));
     }
 
-    // ── Step through tiles one by one ─────────────────────────────────────────
     private IEnumerator MoveCoroutine(int steps)
     {
         isMoving = true;
@@ -72,7 +78,6 @@ public class PlayerController : MonoBehaviour
 
             yield return StartCoroutine(JumpTo(transform.position, target));
 
-            // Highlight tile on landing
             tile.Highlight(board.TileHighlightColor);
             yield return new WaitForSeconds(0.1f);
             tile.ResetColor();
@@ -81,9 +86,11 @@ public class PlayerController : MonoBehaviour
         }
 
         isMoving = false;
+
+        // Re-enable the roll button now that movement is done
+        diceSystem?.UnlockRoll();
     }
 
-    // ── Arc jump between two world positions ──────────────────────────────────
     private IEnumerator JumpTo(Vector3 from, Vector3 to)
     {
         float elapsed = 0f;
@@ -94,17 +101,14 @@ public class PlayerController : MonoBehaviour
             float t      = Mathf.Clamp01(elapsed / jumpDuration);
             float eased  = t < 0.5f ? 2f * t * t : 1f - Mathf.Pow(-2f * t + 2f, 2f) / 2f;
 
-            // Horizontal lerp + parabolic arc on Y
-            Vector3 pos = Vector3.Lerp(from, to, eased);
-            pos.y += Mathf.Sin(t * Mathf.PI) * jumpHeight;
+            Vector3 pos  = Vector3.Lerp(from, to, eased);
+            pos.y       += Mathf.Sin(t * Mathf.PI) * jumpHeight;
             transform.position = pos;
 
-            // Tilt toward direction of travel at peak, straighten at land
-            Vector3 dir   = to - from;
-            float   tilt  = Mathf.Sin(t * Mathf.PI) * 18f * Mathf.Sign(dir.x != 0 ? dir.x : dir.y);
+            Vector3 dir  = to - from;
+            float   tilt = Mathf.Sin(t * Mathf.PI) * 18f * Mathf.Sign(dir.x != 0 ? dir.x : dir.y);
             transform.rotation = Quaternion.Euler(0f, 0f, tilt);
 
-            // Stretch up on the way up, squash at peak start
             float stretchY = 1f + Mathf.Sin(t * Mathf.PI * 0.5f) * 0.25f;
             float stretchX = 1f - Mathf.Sin(t * Mathf.PI * 0.5f) * 0.12f;
             transform.localScale = new Vector3(baseScale.x * stretchX, baseScale.y * stretchY, baseScale.z);
@@ -118,31 +122,27 @@ public class PlayerController : MonoBehaviour
         yield return StartCoroutine(LandSquash());
     }
 
-    // ── Squash & stretch on landing ───────────────────────────────────────────
     private IEnumerator LandSquash()
     {
         const float duration = 0.13f;
         float elapsed = 0f;
         while (elapsed < duration)
         {
-            elapsed += Time.deltaTime;
-            float t       = elapsed / duration;
-            float squashY = 1f - Mathf.Sin(t * Mathf.PI) * 0.38f;
-            float squashX = 1f + Mathf.Sin(t * Mathf.PI) * 0.28f;
+            elapsed  += Time.deltaTime;
+            float t   = elapsed / duration;
             transform.localScale = new Vector3(
-                baseScale.x * squashX,
-                baseScale.y * squashY,
+                baseScale.x * (1f + Mathf.Sin(t * Mathf.PI) * 0.28f),
+                baseScale.y * (1f - Mathf.Sin(t * Mathf.PI) * 0.38f),
                 baseScale.z);
             yield return null;
         }
         transform.localScale = baseScale;
     }
 
-    // ── Procedural circle sprite ───────────────────────────────────────────────
     private static Sprite CreateCircleSprite()
     {
         const int size = 128;
-        Texture2D tex = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        Texture2D tex  = new Texture2D(size, size, TextureFormat.RGBA32, false);
         tex.filterMode = FilterMode.Bilinear;
         Color[] pixels = new Color[size * size];
         float cx = size * 0.5f, cy = size * 0.5f, r = size * 0.44f;
