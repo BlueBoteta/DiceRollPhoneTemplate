@@ -42,17 +42,19 @@ Each run is a fresh board. Each loop of the board makes enemies stronger and rew
 | Tile | Description |
 |---|---|
 | **Encounter** | Triggers an auto-battle against zombies or monsters |
-| **Scavenge** | Ransack a room — find equipment, scrap, or consumables |
-| **Trader** | A shady survivor trading from a van — spend Scrap for gear, consumables, or Relics |
+| **Scavenge** | Ransack a room — find equipment, Scrap, or consumables |
 | **Safe Room** | Rest and recover — restore HP, remove debuffs, choose a consumable or a deeper rest |
 | **Story Tile** | Narrated lore drop with a choice — builds the world and meta-progression |
 | **Hazard Tile** | Contaminated zone — deals direct HP damage and applies Bleed for 2–3 tiles |
 | **Trap** | Bear trap, tripwire — deals damage or applies a debuff |
-| **SOS Signal** | Random help: airdrop loot or a survivor joins briefly |
-| **Event** | Random horror-flavored event with risk/reward outcome |
+| **SOS Signal** | Lucky tile — airdrop of random loot, a consumable, or a small HP restore. No risk, just a find. |
+| **Event** | Random horror-flavored event with risk/reward outcome — an ambush, a stranger offering a deal, a strange discovery, or anything in between |
 | **Mini-Game** | Interactive challenge — win for Scrap, a consumable, or an HP heal; lose for minor damage or nothing |
 
 Tiles are procedurally placed each run with weighted distribution per loop depth.
+
+### The Trader
+The Trader is **not a board tile**. He is a fixed stop that appears at the **start position** of the board once the player completes loop 3. From loop 3 onward, every time the player passes the start tile to begin a new loop, they automatically stop and can trade before rolling again. The Trader sells gear, consumables, and Relics — all priced in Scrap.
 
 ---
 
@@ -165,7 +167,7 @@ Rare items sold by the Trader at a higher Scrap cost than regular gear. No equip
 | **Father's Ring** | Gain 10 HP at the start of each new loop |
 | **Cracked Radio** | Reveal all Story Tiles on the board at run start |
 
-Relics become available at the Trader from loop 2 onward. More powerful ones unlock at deeper loops.
+Relics become available at the Trader from loop 3 onward. More powerful ones unlock at deeper loops.
 
 ---
 
@@ -202,9 +204,9 @@ Defeating a boss ends the run with a Victory screen and bonus Blood Samples.
 
 | Loop | Changes |
 |---|---|
-| 1 | Standard board, learn the basics |
-| 2+ | Relics become available at the Trader |
-| 3–4 | Rarer Relics unlock, enemy variety increases |
+| 1–2 | Standard board, learn the basics — no Trader yet |
+| 3 | Trader appears at the start position — sells gear, consumables, and basic Relics |
+| 4+ | Rarer Relics unlock at the Trader, enemy variety increases |
 | 5+ | Enemies hit harder, Horde tiles appear, boss unlocks |
 | Every loop | Enemies scale up, reward quality improves |
 
